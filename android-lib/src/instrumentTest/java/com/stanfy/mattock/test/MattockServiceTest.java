@@ -7,6 +7,7 @@ import com.stanfy.mattock.MattockService;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +20,13 @@ public class MattockServiceTest extends ServiceTestCase<MattockServiceTest.Servi
     super(Service.class);
   }
 
+  public void testMetadataParsing() {
+    startService(new Intent());
+    ArrayList<Class<?>> testClasses = getService().getTestClasses();
+    assertEquals(2, testClasses.size());
+  }
+
+  @SuppressWarnings("ConstantConditions")
   public void testTestsRunning() {
     startService(new Intent(getContext(), MattockService.class));
     try {
@@ -26,7 +34,7 @@ public class MattockServiceTest extends ServiceTestCase<MattockServiceTest.Servi
     } catch (InterruptedException e) {
       throw new RuntimeException("Service does not finish correctly");
     }
-    String[] reports = getContext().getFilesDir().list(new FilenameFilter() {
+    final String[] reports = getContext().getFilesDir().list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String filename) {
         return filename.startsWith("TEST-");

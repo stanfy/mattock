@@ -1,0 +1,4 @@
+Here we put dependency jars slightly modified to make Android tools pack them into dex-file.
+
+- hamcrest-core-1.3.jar: removed LICENSE.txt.
+- maven-surefire-common-2.15.jar: removed duplicate classes from shade package (they are present in surefire-api jar).

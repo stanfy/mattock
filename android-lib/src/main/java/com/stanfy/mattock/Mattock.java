@@ -1,6 +1,7 @@
 package com.stanfy.mattock;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.apache.maven.plugin.surefire.report.StatelessXmlReporter;
 import org.apache.maven.plugin.surefire.report.TestSetRunListener;
@@ -27,6 +28,7 @@ public final class Mattock {
       AndroidJUnit4RunListener junitListener = new AndroidJUnit4RunListener(test, surefireListener);
       JUnitCore core = new JUnitCore();
       core.addListener(junitListener);
+      Log.i("Mattock", "Running test " + test);
       core.run(test);
     }
   }
