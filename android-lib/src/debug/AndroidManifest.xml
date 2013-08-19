@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.stanfy.mattock"
+          android:versionCode="1"
+          android:versionName="0.9" >
+
+  <uses-sdk
+      android:minSdkVersion="7"
+      android:targetSdkVersion="18" />
+
+  <application>
+
+    <meta-data
+        android:name="com.stanfy.mattock.TEST_CLASSES"
+        android:value="com.stanfy.mattock.test.MyTest;com.stanfy.mattock.test.MyTest2"
+        />
+
+  </application>
+
+</manifest>

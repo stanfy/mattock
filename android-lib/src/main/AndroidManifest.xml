@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.stanfy.mattock"
+    android:versionCode="1"
+    android:versionName="0.9" >
+
+    <uses-sdk
+        android:minSdkVersion="7"
+        android:targetSdkVersion="18" />
+
+    <application>
+
+      <service
+          android:name=".MattockService"
+          android:exported="true"
+          tools:ignore="ExportedService" />
+
+    </application>
+
+</manifest>
