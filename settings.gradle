@@ -1,0 +1,2 @@
+include ':android-lib-dep'
+include ':android-lib'
