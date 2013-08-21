@@ -21,6 +21,16 @@ class AssembleAndroidTestsTask extends DefaultTask {
 
   @TaskAction
   void assmebleAndroidProject() {
+    File sourcesOutput = new File(outputDir, "src/main/java")
+    sourcesOutput.mkdirs()
+
+    // copy test sources
+    project.ant.copy(todir : sourcesOutput) {
+      testSrcDirs.each {
+        fileset dir : it
+      }
+    }
+
 
   }
 

@@ -2,15 +2,14 @@ buildscript {
   repositories {
     mavenCentral()
   }
-
-  dependencies {
-    classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.2'
-  }
 }
 
 apply plugin: 'groovy'
+apply plugin: 'signing'
 apply plugin: 'maven'
-apply plugin: 'nexus'
+
+group = 'com.stanfy.mattock'
+version = '0.1-SNAPSHOT'
 
 dependencies {
   repositories {
@@ -23,35 +22,58 @@ dependencies {
   testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
 }
 
-modifyPom {
+boolean hasCredentials = hasProperty('nexusUsername') && hasProperty('nexusPassword')
 
-  project {
-    name 'Mattock Gradle Plugin'
-    description 'Gradle plugin for Mattock'
-    url 'https://github.com/stanfy/mattock'
-    inceptionYear '2013'
+signing {
+  sign configurations.archives
+}
 
-    scm {
-      url 'https://github.com/stanfy/mattock'
-      connection 'scm:git:git@github.com:stanfy/mattock.git'
-      developerConnection 'scm:git:git@github.com:stanfy/mattock.git'
-    }
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-    licenses {
-      license {
-        name 'The Apache Software License, Version 2.0'
-        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-        distribution 'repo'
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        if (hasCredentials) {
+          authentication(userName: nexusUsername, password: nexusPassword)
+        }
       }
-    }
 
-    developers {
-      developer {
-        id 'rmazur'
-        name 'Roman Mazur'
-        email 'rmazur@stanfy.com.ua'
+      snapshotRepository(url : "https://oss.sonatype.org/content/repositories/snapshots/") {
+        if (hasCredentials) {
+          authentication(userName: nexusUsername, password: nexusPassword)
+        }
       }
+
+      pom.project {
+        name 'Mattock Gradle Plugin'
+        description 'Gradle plugin for Mattock'
+        url 'https://github.com/stanfy/mattock'
+        inceptionYear '2013'
+
+        scm {
+          url 'https://github.com/stanfy/mattock'
+          connection 'scm:git:git@github.com:stanfy/mattock.git'
+          developerConnection 'scm:git:git@github.com:stanfy/mattock.git'
+        }
+
+        licenses {
+          license {
+            name 'The Apache Software License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution 'repo'
+          }
+        }
+
+        developers {
+          developer {
+            id 'rmazur'
+            name 'Roman Mazur'
+            email 'rmazur@stanfy.com.ua'
+          }
+        }
+      }
+
     }
   }
-
 }
