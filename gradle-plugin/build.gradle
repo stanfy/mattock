@@ -1,0 +1,58 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.2'
+  }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'nexus'
+
+dependencies {
+  repositories {
+    mavenCentral()
+  }
+
+  compile gradleApi()
+  compile localGroovy()
+
+  testCompile 'junit:junit:4.11'
+  testCompile 'org.easytesting:fest-assert-core:2.0M10'
+}
+
+modifyPom {
+
+  project {
+    name 'Mattock Gradle Plugin'
+    description 'Gradle plugin for Mattock'
+    url 'https://github.com/stanfy/mattock'
+    inceptionYear '2013'
+
+    scm {
+      url 'https://github.com/stanfy/mattock'
+      connection 'scm:git:git@github.com:stanfy/mattock.git'
+      developerConnection 'scm:git:git@github.com:stanfy/mattock.git'
+    }
+
+    licenses {
+      license {
+        name 'The Apache Software License, Version 2.0'
+        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        distribution 'repo'
+      }
+    }
+
+    developers {
+      developer {
+        id 'rmazur'
+        name 'Roman Mazur'
+        email 'rmazur@stanfy.com.ua'
+      }
+    }
+  }
+
+}

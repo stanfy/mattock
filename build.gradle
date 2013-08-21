@@ -4,3 +4,7 @@ task wrapper(type: Wrapper) {
   gradleVersion = '1.7'
 }
 
+subprojects {
+  group = 'com.stanfy.mattock'
+  version = '0.9-SNAPSHOT'
+}
