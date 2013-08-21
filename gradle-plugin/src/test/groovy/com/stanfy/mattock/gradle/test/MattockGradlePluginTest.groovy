@@ -1,43 +1,56 @@
 package com.stanfy.mattock.gradle.test
 
-import com.stanfy.mattock.gradle.AssembleAndroidTestsTask;
-
-import static org.fest.assertions.api.Assertions.*;
-
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Test;
+import com.stanfy.mattock.gradle.AssembleAndroidTestsTask
+import com.stanfy.mattock.gradle.MattockConfig
+import com.stanfy.mattock.gradle.MattockGradlePlugin
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
+import spock.lang.Specification
 
 /**
  * Tests for MattockGradlePlugin.
  */
-public class MattockGradlePluginTest {
+public class MattockGradlePluginSpec extends Specification {
 
-  // TODO: use spock
+  /** Project under test. */
+  Project project = ProjectBuilder.builder().build();
 
-  @Test(expected = IllegalStateException.class)
-  void shouldFailWithoutJavaPlugin() {
-    Project project = ProjectBuilder.builder().build();
+  def "should fail without Java plugin"() {
+    when:
     project.apply plugin: 'mattock'
+
+    then:
+    thrown(IllegalStateException.class)
   }
 
-  @Test
-  void shouldWorkWithJavaPlugin() {
-    Project project = ProjectBuilder.builder().build();
-    project.apply plugin: 'java'
-    project.apply plugin: 'mattock'
-  }
-
-  @Test
-  void shouldAddAssembleAndroidTestsTask() {
-    Project project = ProjectBuilder.builder().build();
+  def "should work with Java plugin"() {
+    given:
     project.apply plugin: 'java'
     project.apply plugin: 'mattock'
 
-    AssembleAndroidTestsTask task = project.tasks['assembleAndroidTests']
-    assertThat(task) isNotNull()
-    assertThat(task.testSrcDirs) isNotEmpty()
+    expect:
+    project.plugins.hasPlugin(MattockGradlePlugin.class)
   }
 
+  def "should add mattock extension"() {
+    given:
+    project.apply plugin: 'java'
+    project.apply plugin: 'mattock'
+
+    expect:
+    project.mattock instanceof MattockConfig
+  }
+
+  def "should add assembleAndroidTests task"() {
+    given:
+    project.apply plugin: 'java'
+    project.apply plugin: 'mattock'
+    AssembleAndroidTestsTask task = project.tasks['assembleAndroidTests'] as AssembleAndroidTestsTask
+
+    expect:
+    task != null
+    !task.testSrcDirs.empty
+    task.outputDir != null
+  }
 
 }

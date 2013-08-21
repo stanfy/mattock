@@ -20,8 +20,7 @@ dependencies {
   compile gradleApi()
   compile localGroovy()
 
-  testCompile 'junit:junit:4.11'
-  testCompile 'org.easytesting:fest-assert-core:2.0M10'
+  testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
 }
 
 modifyPom {

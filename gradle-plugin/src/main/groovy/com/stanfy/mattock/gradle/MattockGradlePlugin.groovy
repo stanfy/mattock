@@ -23,21 +23,28 @@ class MattockGradlePlugin implements Plugin<Project> {
       throw new IllegalStateException("Currently mattock can be used with java projects only to test them on Android devices");
     }
 
+    //noinspection GroovyAssignabilityCheck
+    project.extensions.add("mattock", MattockConfig)
+    MattockConfig config = project.mattock
+
     def testTask = project.tasks.findByName('test')
     if (!testTask || !(testTask instanceof Test)) {
       throw new IllegalArgumentException("Cannot find Test task with name 'test'");
     }
 
     List<File> testDirs = testTask.testSrcDirs
-    if (!testDirs) {
-      LOG.info("No test directories: nothing to do for mattock")
-      return;
-    }
 
     AssembleAndroidTestsTask assembleTask = project.tasks.create("assembleAndroidTests", AssembleAndroidTestsTask.class)
     assembleTask.group = BasePlugin.BUILD_GROUP;
     assembleTask.description = "Assembles Android project that can build a service for further installation and running on a device"
     assembleTask.testSrcDirs = testDirs;
+    assembleTask.outputDir = config.getSourcesOutput(project)
+
+    project.afterEvaluate {
+      if (config.testSrcDirs) {
+        assembleTask.testSrcDirs = config.testSrcDirs
+      }
+    }
 
   }
 
