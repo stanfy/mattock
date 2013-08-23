@@ -5,6 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory;
@@ -27,23 +28,36 @@ class MattockGradlePlugin implements Plugin<Project> {
     project.extensions.add("mattock", MattockConfig)
     MattockConfig config = project.mattock
 
-    def testTask = project.tasks.findByName('test')
+    final def testTask = project.tasks.findByName('test')
     if (!testTask || !(testTask instanceof Test)) {
       throw new IllegalArgumentException("Cannot find Test task with name 'test'");
     }
+    final def jarTask = project.tasks.findByName('jar')
+    if (!jarTask || !(jarTask instanceof Jar)) {
+      throw new IllegalArgumentException("Cannot find Jar task with name 'jar'");
+    }
 
     List<File> testDirs = testTask.testSrcDirs
+    File mainJar = jarTask.archivePath
 
     AssembleAndroidTestsTask assembleTask = project.tasks.create("assembleAndroidTests", AssembleAndroidTestsTask.class)
     assembleTask.group = BasePlugin.BUILD_GROUP;
-    assembleTask.description = "Assembles Android project that can build a service for further installation and running on a device"
+    assembleTask.description = "Assembles Android project that can build a service for further installation and running tests on a device"
     assembleTask.testSrcDirs = testDirs;
     assembleTask.outputDir = config.getSourcesOutput(project)
+    assembleTask.mainJar = mainJar
+
+    assembleTask.dependsOn 'jar'
 
     project.afterEvaluate {
       if (config.testSrcDirs) {
         assembleTask.testSrcDirs = config.testSrcDirs
       }
+      assembleTask.includes = testTask.includes
+      assembleTask.excludes = testTask.excludes
+      assembleTask.mainJar = jarTask.archivePath
+      LOG.debug("Configured includes: " + assembleTask.includes)
+      LOG.debug("Configured excludes: " + assembleTask.excludes)
     }
 
   }

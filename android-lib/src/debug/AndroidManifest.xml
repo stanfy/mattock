@@ -10,9 +10,12 @@
 
   <application>
 
+    <service
+        android:name=".MattockService"
+        android:exported="true" />
     <meta-data
         android:name="com.stanfy.mattock.TEST_CLASSES"
-        android:value="com.stanfy.mattock.test.MyTest;com.stanfy.mattock.test.MyTest2"
+        android:value="com.stanfy.mattock.test.MyTest;com.stanfy.mattock.test.MyTest2;com.stanfy.mattock.test.AbstractTest"
         />
 
   </application>

@@ -7,6 +7,7 @@ import org.apache.maven.plugin.surefire.report.StatelessXmlReporter;
 import org.apache.maven.plugin.surefire.report.TestSetRunListener;
 import org.junit.runner.JUnitCore;
 
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -23,6 +24,7 @@ public final class Mattock {
 
   public static void run(final Context context, final Collection<Class<?>> testClasses) {
     for (Class<?> test : testClasses) {
+      if (Modifier.isAbstract(test.getModifiers())) { continue; }
       StatelessXmlReporter xmlReporter = new StatelessXmlReporter(context.getFilesDir(), null, false);
       TestSetRunListener surefireListener = new TestSetRunListener(null, null, xmlReporter, new DummyTestcycleConsoleOutputReceiver(), null, null, false, false, false);
       AndroidJUnit4RunListener junitListener = new AndroidJUnit4RunListener(test, surefireListener);

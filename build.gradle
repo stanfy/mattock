@@ -1,10 +1,85 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:0.5.+'
+  }
+}
 
 task wrapper(type: Wrapper) {
   gradleVersion = '1.7'
 }
 
+boolean hasCredentials = hasProperty('nexusUsername') && hasProperty('nexusPassword')
+
 subprojects {
   group = 'com.stanfy.mattock'
   version = '0.9-SNAPSHOT'
+
+  if (name.contains('android')) {
+    apply plugin: 'android-library'
+  }
+
+  apply plugin: 'signing'
+  apply plugin: 'maven'
+
+  repositories {
+    mavenCentral()
+  }
+
+  signing {
+    sign configurations.archives
+  }
+
+  uploadArchives {
+    repositories {
+      mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+          if (hasCredentials) {
+            authentication(userName: nexusUsername, password: nexusPassword)
+          }
+        }
+
+        snapshotRepository(url : "https://oss.sonatype.org/content/repositories/snapshots/") {
+          if (hasCredentials) {
+            authentication(userName: nexusUsername, password: nexusPassword)
+          }
+        }
+
+        pom.project {
+          name 'Mattock'
+          description 'JUnit4 tests runner for Android'
+          url 'https://github.com/stanfy/mattock'
+          inceptionYear '2013'
+
+          scm {
+            url 'https://github.com/stanfy/mattock'
+            connection 'scm:git:git@github.com:stanfy/mattock.git'
+            developerConnection 'scm:git:git@github.com:stanfy/mattock.git'
+          }
+
+          licenses {
+            license {
+              name 'The Apache Software License, Version 2.0'
+              url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+              distribution 'repo'
+            }
+          }
+
+          developers {
+            developer {
+              id 'rmazur'
+              name 'Roman Mazur'
+              email 'rmazur@stanfy.com.ua'
+            }
+          }
+        }
+
+      }
+    }
+  }
+
 }

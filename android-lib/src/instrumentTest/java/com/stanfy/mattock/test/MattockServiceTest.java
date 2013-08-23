@@ -23,7 +23,7 @@ public class MattockServiceTest extends ServiceTestCase<MattockServiceTest.Servi
   public void testMetadataParsing() {
     startService(new Intent());
     ArrayList<Class<?>> testClasses = getService().getTestClasses();
-    assertEquals(2, testClasses.size());
+    assertEquals(3, testClasses.size()); // abstract test included
   }
 
   @SuppressWarnings("ConstantConditions")
@@ -40,7 +40,7 @@ public class MattockServiceTest extends ServiceTestCase<MattockServiceTest.Servi
         return filename.startsWith("TEST-");
       }
     });
-    assertEquals(2, reports.length);
+    assertEquals(2, reports.length); // abstract test excluded
     assertTrue(reports[0].indexOf("MyTest.xml") > 0);
     assertTrue(reports[1].indexOf("MyTest2.xml") > 0);
   }
