@@ -3,6 +3,7 @@ package com.stanfy.mattock.test;
 import android.content.Intent;
 import android.test.ServiceTestCase;
 
+import com.stanfy.mattock.Mattock;
 import com.stanfy.mattock.MattockService;
 
 import java.io.File;
@@ -34,7 +35,7 @@ public class MattockServiceTest extends ServiceTestCase<MattockServiceTest.Servi
     } catch (InterruptedException e) {
       throw new RuntimeException("Service does not finish correctly");
     }
-    final String[] reports = getContext().getFilesDir().list(new FilenameFilter() {
+    final String[] reports = Mattock.getReportsDir(getContext()).list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String filename) {
         return filename.startsWith("TEST-");

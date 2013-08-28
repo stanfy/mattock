@@ -1,11 +1,17 @@
 package com.stanfy.mattock;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -53,6 +59,14 @@ public class MattockService extends IntentService {
   @Override
   protected void onHandleIntent(final Intent intent) {
     Mattock.run(this, getTestClasses());
+    try {
+      Socket socket = new Socket(InetAddress.getByName(intent.getStringExtra("receiverAddress")), intent.getIntExtra("receiverPort", 0));
+      OutputStream out = socket.getOutputStream();
+      out.write((Mattock.getReportsDir(this).getAbsolutePath() + "\n").getBytes("UTF-8"));
+      out.close();
+    } catch (IOException e) {
+      Log.w("Mattock", "Cannot report about results", e);
+    }
   }
 
 }

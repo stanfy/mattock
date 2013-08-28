@@ -20,7 +20,11 @@ class AssembleAndroidTestsTask extends DefaultTask {
 
   /** Test sources. */
   @InputFiles
-  List<File> testSrcDirs;
+  List<File> testSrcDirs
+
+  /** Test resources. */
+  @InputFiles
+  List<File> testResourcesDir
 
   /** Main lib jar. */
   @InputFile
@@ -63,6 +67,18 @@ class AssembleAndroidTestsTask extends DefaultTask {
     return testsDescription
   }
 
+  File getMainOutputDirectory() {
+    return new File(outputDir, "$project.name-tests")
+  }
+
+  File getDebugApk() {
+    return new File(mainOutputDirectory, "build/apk/$project.name-tests-debug-unaligned.apk")
+  }
+
+  String getPackageName() {
+    return "${project.group}.${project.name.replaceAll(/\W/, '')}"
+  }
+
   private static void write(final File out, final String what) {
     out.withOutputStream {
       it << what.trim().getBytes('UTF-8')
@@ -71,10 +87,22 @@ class AssembleAndroidTestsTask extends DefaultTask {
 
   @TaskAction
   void assmebleAndroidProject() {
-    File mainDir = new File(outputDir, "$project.name-tests")
+    File mainDir = getMainOutputDirectory()
     File depsDir = new File(outputDir, "$project.name-deps")
 
-    def depManifest = """
+    // make a root project
+    write new File(outputDir, "build.xml"), ""
+
+    write new File(outputDir, "settings.gradle"), """
+include '$project.name-deps'
+include '$project.name-tests'
+"""
+
+    // make a dependencies projects (Android plugin workaround)
+
+    File depManifestFile = new File(depsDir, "src/main/AndroidManifest.xml")
+    depManifestFile.parentFile.mkdirs()
+    write depManifestFile, """
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="mattock.dependencies"
@@ -85,48 +113,8 @@ class AssembleAndroidTestsTask extends DefaultTask {
 
 </manifest>
 """
-    File depManifestFile = new File(depsDir, "src/main/AndroidManifest.xml")
-    depManifestFile.parentFile.mkdirs()
-    write depManifestFile, depManifest
 
-
-    File sourcesOutput = new File(mainDir, "src/main/java")
-    sourcesOutput.mkdirs()
-
-    // copy test sources
-    project.ant.copy(todir : sourcesOutput) {
-      testSrcDirs.each {
-        fileset dir : it
-      }
-    }
-
-    // generate Manifest file
-    def manifest = """
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="${project.group}.${project.name.replaceAll(/\W/, '')}"
-    android:versionCode="1"
-    android:versionName="1" >
-
-  <application>
-
-    <service
-        android:name=".MattockService"
-        android:exported="true" />
-    <meta-data
-        android:name="com.stanfy.mattock.TEST_CLASSES"
-        android:value="$testListDescription"
-        />
-
-  </application>
-
-</manifest>
-"""
-    write new File(outputDir, "src/main/AndroidManifest.xml"), manifest
-
-    // generate build.gradle
-    def buildFile = """
+    write new File(depsDir, "build.gradle"), """
 buildscript {
   repositories {
     mavenCentral()
@@ -135,12 +123,8 @@ buildscript {
     classpath 'com.android.tools.build:gradle:0.5.+'
   }
 }
-apply plugin: 'android-library'
 
-repositories {
-  mavenCentral()
-  maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-}
+apply plugin: 'android-library'
 
 android {
   compileSdkVersion 18
@@ -152,21 +136,115 @@ android {
   }
 }
 
+repositories {
+  mavenCentral()
+  maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+
 dependencies {
   ${
-    ['compile', 'testCompile'].inject("") { res, conf ->
-      res + project.configurations[conf].inject("") { confRes, dep -> confRes + "compile files('${dep}')\n" }
-    }
+      ['compile', 'testCompile'].inject("") { res, conf ->
+        res + project.configurations[conf].inject("") { confRes, dep ->
+          def str = "$dep";
+          confRes + (['hamcrest-core', 'xmlpull'].any {str.contains(it)} ? "" : "compile files('$str')\n")
+        }
+      }
   }
   compile files('$mainJar.absolutePath')
 
-  compile 'com.stanfy.mattock:android-lib:0.9-SNAPSHOT'
+  compile('com.stanfy.mattock:android-lib:0.9-SNAPSHOT') {
+    transitive = false
+  }
+  compile('com.stanfy.mattock:android-lib-dep:0.9-SNAPSHOT') {
+    transitive = false
+  }
+  compile('org.apache.maven.surefire:common-junit4:2.15') {
+    transitive = false
+  }
+  compile('org.apache.maven.surefire:surefire-api:2.15') {
+    transitive = false
+  }
+}
+"""
+
+    // main test project
+
+    File sourcesOutput = new File(mainDir, "src/main/java")
+    File resourcesOutput = new File(mainDir, "src/main/resources")
+    sourcesOutput.mkdirs()
+    resourcesOutput.mkdirs()
+
+    // copy test sources
+    project.ant.copy(todir : sourcesOutput) {
+      testSrcDirs.each {
+        fileset dir : it
+      }
+    }
+    // copy test resources
+    project.ant.copy(todir : resourcesOutput) {
+      testResourcesDir.each {
+        if (it.exists()) {
+          fileset dir : it
+        }
+      }
+    }
+
+    write new File(mainDir, "src/main/AndroidManifest.xml"), """
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="$packageName"
+    android:versionCode="1"
+    android:versionName="1" >
+
+  <uses-permission android:name="android.permission.INTERNET" />
+
+  <application>
+
+    <service
+        android:name="com.stanfy.mattock.MattockService"
+        android:exported="true" />
+    <meta-data
+        android:name="com.stanfy.mattock.TEST_CLASSES"
+        android:value="$testListDescription"
+        />
+
+  </application>
+
+</manifest>
+"""
+
+    write new File(mainDir, "build.gradle"), """
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:0.5.+'
+  }
 }
 
+apply plugin: 'android'
+
+android {
+  compileSdkVersion 18
+  buildToolsVersion "18.0.1"
+
+  defaultConfig {
+    minSdkVersion 7
+    targetSdkVersion 18
+  }
+}
+
+repositories {
+  mavenCentral()
+  maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+
+dependencies {
+  compile project(':$project.name-deps')
+}
 """
-    new File(outputDir, "build.gradle").withOutputStream {
-      it << buildFile.trim().getBytes('UTF-8')
-    }
 
 
   }
