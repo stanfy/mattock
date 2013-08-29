@@ -42,7 +42,32 @@ class RunAndroidTestsTask extends DefaultTask {
       throw new IllegalStateException("Cannot find ADB executable at path $adb")
     }
 
-    println "Installing test APK on a device..."
+    int runCount = 0
+    runCmd("$adb devices").split(/\n/).each {
+      def serialMatcher = it =~ /(.+)\sdevice/
+      if (serialMatcher.matches()) {
+        runCount++
+        runOnADevice(adb, serialMatcher[0][1])
+      }
+    }
+
+    println runCount ? "Run on $runCount devices" : "No connected devices found"
+
+  }
+
+  private static String runCmd(final String cmd) {
+    def proc = cmd.execute()
+    int res = proc.waitFor()
+    if (res != 0) {
+      throw new IllegalStateException("Cannot run $cmd.\n${proc.inputStream.text}\n${proc.errorStream.text}")
+    }
+    return proc.inputStream.text + "\n" + proc.errorStream.text
+  }
+
+  private void runOnADevice(final def adbPath, final def device) {
+    String adb = "$adbPath -s $device"
+
+    LOG.info("Installing APK on $device")
     runCmd "$adb install -r $testApk"
 
     ServerSocket server = new ServerSocket(9999);
@@ -60,10 +85,10 @@ class RunAndroidTestsTask extends DefaultTask {
       }
     }
 
-    println "Running tests..."
+    LOG.info("Running tests on $device")
     runCmd "$adb shell am startservice -n $packageName/com.stanfy.mattock.MattockService --es receiverAddress $host --ei receiverPort 9999"
 
-    println "Getting results..."
+    LOG.info("Waiting for results from $device")
 
     Socket socket = server.accept()
     BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"))
@@ -72,19 +97,11 @@ class RunAndroidTestsTask extends DefaultTask {
     server.close()
 
     def files = runCmd("$adb shell ls $reportsPath").split(/\n/)
-    reportsDir.mkdirs()
+    File out = new File(reportsDir, device)
+    out.mkdirs()
     files.each {
-      runCmd "$adb pull $reportsPath/$it $reportsDir/$it"
+      runCmd "$adb pull $reportsPath/$it $out/$it"
     }
-  }
-
-  private static String runCmd(final String cmd) {
-    def proc = cmd.execute()
-    int res = proc.waitFor()
-    if (res != 0) {
-      throw new IllegalStateException("Cannot run $cmd.\n${proc.inputStream.text}\n${proc.errorStream.text}")
-    }
-    return proc.inputStream.text + "\n" + proc.errorStream.text
   }
 
 }
