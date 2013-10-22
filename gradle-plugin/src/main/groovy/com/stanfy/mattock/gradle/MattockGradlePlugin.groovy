@@ -85,6 +85,11 @@ class MattockGradlePlugin implements Plugin<Project> {
       LOG.debug("Configured includes: " + assembleTask.includes)
       LOG.debug("Configured excludes: " + assembleTask.excludes)
       syncTaskOutputs(project)
+
+      runTask.debug = config.debug
+      runTask.allDevices = config.allDevices
+      runTask.devices = config.devices
+      runTask.ignoreMissingDevices = config.ignoreMissingDevices
     }
 
   }

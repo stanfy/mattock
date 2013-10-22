@@ -28,7 +28,6 @@ public final class Mattock {
 
   public static File getReportsDir(final Context context) {
     return context.getFilesDir();
-    //return new File(Environment.getExternalStorageDirectory(), "test-reports/" + context.getPackageName());
   }
 
   public static void run(final Context context, final Collection<Class<?>> testClasses) {

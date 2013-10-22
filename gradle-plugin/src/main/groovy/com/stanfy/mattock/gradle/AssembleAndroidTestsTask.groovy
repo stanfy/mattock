@@ -91,7 +91,7 @@ class AssembleAndroidTestsTask extends DefaultTask {
     File depsDir = new File(outputDir, "$project.name-deps")
 
     // make a root project
-    write new File(outputDir, "build.xml"), ""
+    write new File(outputDir, "build.gradle"), ""
 
     write new File(outputDir, "settings.gradle"), """
 include '$project.name-deps'
@@ -152,10 +152,10 @@ dependencies {
   }
   compile files('$mainJar.absolutePath')
 
-  compile('com.stanfy.mattock:android-lib:0.9-SNAPSHOT') {
+  compile('com.stanfy.mattock:android-lib:${MattockConfig.VERSION}') {
     transitive = false
   }
-  compile('com.stanfy.mattock:android-lib-dep:0.9-SNAPSHOT') {
+  compile('com.stanfy.mattock:android-lib-dep:${MattockConfig.VERSION}') {
     transitive = false
   }
   compile('org.apache.maven.surefire:common-junit4:2.15') {
@@ -196,8 +196,6 @@ dependencies {
           package="$packageName"
     android:versionCode="1"
     android:versionName="1" >
-
-  <uses-permission android:name="android.permission.INTERNET" />
 
   <application>
 
