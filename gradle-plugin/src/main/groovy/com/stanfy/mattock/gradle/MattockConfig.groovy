@@ -8,7 +8,7 @@ import org.gradle.api.Project;
 public class MattockConfig {
 
   /** Mattock version. */
-  public static final String VERSION = "1.0-SNAPSHOT";
+  public static final String VERSION = "1.0";
 
   /** Base output directory name. */
   private static final String BASE_OUT_DIR_NAME = "android-tests"

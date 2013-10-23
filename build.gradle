@@ -15,7 +15,7 @@ boolean hasCredentials = hasProperty('nexusUsername') && hasProperty('nexusPassw
 
 subprojects {
   group = 'com.stanfy.mattock'
-  version = '1.0-SNAPSHOT'
+  version = '1.0'
 
   if (name.contains('android')) {
     apply plugin: 'android-library'
@@ -29,6 +29,7 @@ subprojects {
   }
 
   afterEvaluate {
+
     signing {
       sign configurations.archives
     }

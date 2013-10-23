@@ -12,6 +12,15 @@ dependencies {
   compile project(':android-lib-dep')
 }
 
+task sourcesJar(type: Jar) {
+  from 'src/main/java'
+  classifier = 'sources'
+}
+
+artifacts {
+  archives sourcesJar
+}
+
 uploadArchives {
   repositories {
     mavenDeployer {
