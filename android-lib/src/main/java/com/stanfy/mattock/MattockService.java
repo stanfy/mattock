@@ -58,14 +58,17 @@ public class MattockService extends IntentService {
 
   @Override
   protected void onHandleIntent(final Intent intent) {
-    Mattock.run(this, getTestClasses());
     try {
-      Socket socket = new Socket(InetAddress.getByName(intent.getStringExtra("receiverAddress")), intent.getIntExtra("receiverPort", 0));
-      OutputStream out = socket.getOutputStream();
-      out.write((Mattock.getReportsDir(this).getAbsolutePath() + "\n").getBytes("UTF-8"));
-      out.close();
-    } catch (IOException e) {
-      Log.w("Mattock", "Cannot report about results", e);
+      Mattock.run(this, getTestClasses());
+    } finally {
+      try {
+        Socket socket = new Socket(InetAddress.getByName(intent.getStringExtra("receiverAddress")), intent.getIntExtra("receiverPort", 0));
+        OutputStream out = socket.getOutputStream();
+        out.write((Mattock.getReportsDir(this).getAbsolutePath() + "\n").getBytes("UTF-8"));
+        out.close();
+      } catch (IOException e) {
+        Log.w("Mattock", "Cannot report about results", e);
+      }
     }
   }
 

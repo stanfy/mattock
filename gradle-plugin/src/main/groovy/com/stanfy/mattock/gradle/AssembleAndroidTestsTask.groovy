@@ -87,6 +87,8 @@ class AssembleAndroidTestsTask extends DefaultTask {
 
   @TaskAction
   void assmebleAndroidProject() {
+    int minSdkVersion = 7
+
     File mainDir = getMainOutputDirectory()
     File depsDir = new File(outputDir, "$project.name-deps")
 
@@ -128,10 +130,10 @@ apply plugin: 'android-library'
 
 android {
   compileSdkVersion 18
-  buildToolsVersion "18.0.1"
+  buildToolsVersion "18.1.0"
 
   defaultConfig {
-    minSdkVersion 7
+    minSdkVersion $minSdkVersion
     targetSdkVersion 18
   }
 }
@@ -226,10 +228,10 @@ apply plugin: 'android'
 
 android {
   compileSdkVersion 18
-  buildToolsVersion "18.0.1"
+  buildToolsVersion "18.1.0"
 
   defaultConfig {
-    minSdkVersion 7
+    minSdkVersion $minSdkVersion
     targetSdkVersion 18
   }
 }

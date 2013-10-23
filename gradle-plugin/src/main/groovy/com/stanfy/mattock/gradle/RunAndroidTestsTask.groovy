@@ -3,6 +3,9 @@ package com.stanfy.mattock.gradle
 import com.android.ddmlib.*
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,12 +22,15 @@ class RunAndroidTestsTask extends DefaultTask {
   private static final Logger LOG = LoggerFactory.getLogger(RunAndroidTestsTask.class)
 
   /** APK file that should be tested. */
+  @InputFile
   File testApk
 
   /** Tests package name. */
+  @Input
   String packageName
 
   /** Output directory. */
+  @OutputDirectory
   File reportsDir
 
   boolean ignoreMissingDevices
@@ -125,6 +131,7 @@ class RunAndroidTestsTask extends DefaultTask {
         String msg = "No devices set to run. Connected devices: $connectedDeviceNames."
         if (ignoreMissingDevices) {
           LOG.error(msg)
+          return
         } else {
           throw new IllegalStateException(msg);
         }
@@ -157,7 +164,8 @@ class RunAndroidTestsTask extends DefaultTask {
       return
     }
 
-    ServerSocket server = new ServerSocket(9999);
+    int port = 9999
+    ServerSocket server = new ServerSocket(port);
     def interfaces = NetworkInterface.getNetworkInterfaces()
     def host = null
     while (interfaces.hasMoreElements()) {
@@ -172,8 +180,9 @@ class RunAndroidTestsTask extends DefaultTask {
       }
     }
 
+    // TODO: find a way how to run service with ddmlib
     LOG.info("Running tests on $device")
-    runCmd "$adbPath shell am startservice -n $packageName/com.stanfy.mattock.MattockService --es receiverAddress $host --ei receiverPort 9999"
+    runCmd "$adbPath shell am startservice -n $packageName/com.stanfy.mattock.MattockService --es receiverAddress $host --ei receiverPort $port"
 
     LOG.info("Waiting for results from $device")
 
@@ -184,10 +193,33 @@ class RunAndroidTestsTask extends DefaultTask {
     server.close()
 
     File out = new File(reportsDir, device.serialNumber)
-    device.syncService.pull([obtainDirectoryFileEntry(reportsPath)] as FileListingService.FileEntry[],
+    out.mkdirs()
+    FileListingService.FileEntry deviceDir = obtainDirectoryFileEntry(reportsPath)
+    LOG.info "Pulling reports from $device.serialNumber ($deviceDir.fullPath, $deviceDir.directory) to $out"
+    device.syncService.pull([deviceDir] as FileListingService.FileEntry[],
         out.absolutePath, SyncService.nullProgressMonitor)
+    fixOutput(out)
 
     device.uninstallPackage(packageName)
+  }
+
+  private static void fixOutput(final File out) {
+    File[] content = out.listFiles()
+    if (!content) {
+      throw new RuntimeException("No reports!")
+    }
+    if (content.length == 1 && content[0].directory) {
+      File[] reports = content[0].listFiles()
+      if (reports && reports.length > 0) {
+        boolean ok = true
+        reports.each {
+          ok &= it.renameTo(new File(it.parentFile.parentFile, it.name))
+        }
+        if (ok) {
+          content[0].delete()
+        }
+      }
+    }
   }
 
 }
