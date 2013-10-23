@@ -87,11 +87,13 @@ class AssembleAndroidTestsTask extends DefaultTask {
 
   @TaskAction
   void assmebleAndroidProject() {
+    int minSdkVersion = 7
+
     File mainDir = getMainOutputDirectory()
     File depsDir = new File(outputDir, "$project.name-deps")
 
     // make a root project
-    write new File(outputDir, "build.xml"), ""
+    write new File(outputDir, "build.gradle"), ""
 
     write new File(outputDir, "settings.gradle"), """
 include '$project.name-deps'
@@ -128,10 +130,10 @@ apply plugin: 'android-library'
 
 android {
   compileSdkVersion 18
-  buildToolsVersion "18.0.1"
+  buildToolsVersion "18.1.0"
 
   defaultConfig {
-    minSdkVersion 7
+    minSdkVersion $minSdkVersion
     targetSdkVersion 18
   }
 }
@@ -152,10 +154,10 @@ dependencies {
   }
   compile files('$mainJar.absolutePath')
 
-  compile('com.stanfy.mattock:android-lib:0.9-SNAPSHOT') {
+  compile('com.stanfy.mattock:android-lib:${MattockConfig.VERSION}') {
     transitive = false
   }
-  compile('com.stanfy.mattock:android-lib-dep:0.9-SNAPSHOT') {
+  compile('com.stanfy.mattock:android-lib-dep:${MattockConfig.VERSION}') {
     transitive = false
   }
   compile('org.apache.maven.surefire:common-junit4:2.15') {
@@ -197,8 +199,6 @@ dependencies {
     android:versionCode="1"
     android:versionName="1" >
 
-  <uses-permission android:name="android.permission.INTERNET" />
-
   <application>
 
     <service
@@ -228,10 +228,10 @@ apply plugin: 'android'
 
 android {
   compileSdkVersion 18
-  buildToolsVersion "18.0.1"
+  buildToolsVersion "18.1.0"
 
   defaultConfig {
-    minSdkVersion 7
+    minSdkVersion $minSdkVersion
     targetSdkVersion 18
   }
 }

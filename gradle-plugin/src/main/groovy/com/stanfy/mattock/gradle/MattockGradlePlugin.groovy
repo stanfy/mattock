@@ -76,17 +76,30 @@ class MattockGradlePlugin implements Plugin<Project> {
     syncTaskOutputs(project)
 
     project.afterEvaluate {
-      if (config.testSrcDirs) {
-        assembleTask.testSrcDirs = config.testSrcDirs
-      }
-      assembleTask.includes = testTask.includes
-      assembleTask.excludes = testTask.excludes
-      assembleTask.mainJar = jarTask.archivePath
-      LOG.debug("Configured includes: " + assembleTask.includes)
-      LOG.debug("Configured excludes: " + assembleTask.excludes)
-      syncTaskOutputs(project)
+      onConfigReady(project)
     }
 
+  }
+
+  void onConfigReady(final Project project) {
+    MattockConfig config = project.mattock
+    final def testTask = project.tasks.findByName('test')
+    final def jarTask = project.tasks.findByName('jar')
+
+    if (config.testSrcDirs) {
+      assembleTask.testSrcDirs = config.testSrcDirs
+    }
+    assembleTask.includes = testTask.includes
+    assembleTask.excludes = testTask.excludes
+    assembleTask.mainJar = jarTask.archivePath
+    LOG.debug("Configured includes: " + assembleTask.includes)
+    LOG.debug("Configured excludes: " + assembleTask.excludes)
+    syncTaskOutputs(project)
+
+    runTask.debug = config.debug
+    runTask.allDevices = config.allDevices
+    runTask.devices = config.devices
+    runTask.ignoreMissingDevices = config.ignoreMissingDevices
   }
 
   private void syncTaskOutputs(final Project project) {
